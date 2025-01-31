@@ -1,0 +1,21 @@
+#include <iostream>
+#include <cmath>
+
+int main() {
+    const int radius = 10;
+    const int diameter = 2 * radius;
+
+    for (int y = -radius; y <= radius; y++) {
+        for (int x = -radius; x <= radius; x++) {
+            if (std::round(std::sqrt(x*x + y*y)) == radius) {
+                std::cout << "*";
+            } else {
+                std::cout << " ";
+            }
+        }
+        std::cout << std::endl;
+    }
+
+    return 0;
+}
+
