@@ -1,21 +1,158 @@
 #include <iostream>
-#include <cmath>
+#include <conio.h>
+#include <windows.h>
+#include <vector>
+#include <cstdlib>
+#include <ctime>
 
-int main() {
-    const int radius = 10;
-    const int diameter = 2 * radius;
+using namespace std;
 
-    for (int y = -radius; y <= radius; y++) {
-        for (int x = -radius; x <= radius; x++) {
-            if (std::round(std::sqrt(x*x + y*y)) == radius) {
-                std::cout << "*";
-            } else {
-                std::cout << " ";
-            }
+const int WIDTH = 20;
+const int HEIGHT = 20;
+
+class Snake {
+private:
+    int x, y;
+    int tailX[100], tailY[100];
+    int nTail;
+    enum Direction { STOP = 0, LEFT, RIGHT, UP, DOWN };
+    Direction dir;
+
+public:
+    Snake() : x(WIDTH / 2), y(HEIGHT / 2), nTail(0), dir(STOP) {}
+
+    void Move() {
+        for (int i = nTail - 1; i > 0; i--) {
+            tailX[i] = tailX[i - 1];
+            tailY[i] = tailY[i - 1];
         }
-        std::cout << std::endl;
+        tailX[0] = x;
+        tailY[0] = y;
+
+        switch (dir) {
+            case LEFT:  x--; break;
+            case RIGHT: x++; break;
+            case UP:    y--; break;
+            case DOWN:  y++; break;
+        }
     }
 
+    void ChangeDir(char key) {
+        switch (key) {
+            case 'a': if (dir != RIGHT) dir = LEFT; break;
+            case 'd': if (dir != LEFT) dir = RIGHT; break;
+            case 'w': if (dir != DOWN) dir = UP; break;
+            case 's': if (dir != UP) dir = DOWN; break;
+        }
+    }
+
+    bool CollisionCheck(int fruitX, int fruitY) {
+        if (x == fruitX && y == fruitY) {
+            nTail++;
+            return true;
+        }
+        return false;
+    }
+
+    bool GameOver() {
+        if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT)
+            return true;
+        for (int i = 0; i < nTail; i++)
+            if (tailX[i] == x && tailY[i] == y)
+                return true;
+        return false;
+    }
+
+    int GetX() const { return x; }
+    int GetY() const { return y; }
+    int GetTailX(int i) const { return tailX[i]; }
+    int GetTailY(int i) const { return tailY[i]; }
+    int GetNTail() const { return nTail; }
+};
+
+class Game {
+private:
+    Snake snake;
+    int fruitX, fruitY;
+    int score;
+    bool gameOver;
+
+public:
+    Game() : score(0), gameOver(false) {
+        srand(time(0));
+        fruitX = rand() % WIDTH;
+        fruitY = rand() % HEIGHT;
+    }
+
+    void Draw() {
+        system("cls");
+        for (int i = 0; i < WIDTH + 2; i++)
+            cout << "#";
+        cout << endl;
+
+        for (int i = 0; i < HEIGHT; i++) {
+            for (int j = 0; j < WIDTH; j++) {
+                if (j == 0)
+                    cout << "#";
+                if (i == snake.GetY() && j == snake.GetX())
+                    cout << "O";
+                else if (i == fruitY && j == fruitX)
+                    cout << "F";
+                else {
+                    bool print = false;
+                    for (int k = 0; k < snake.GetNTail(); k++) {
+                        if (snake.GetTailX(k) == j && snake.GetTailY(k) == i) {
+                            cout << "o";
+                            print = true;
+                        }
+                    }
+                    if (!print)
+                        cout << " ";
+                }
+                if (j == WIDTH - 1)
+                    cout << "#";
+            }
+            cout << endl;
+        }
+
+        for (int i = 0; i < WIDTH + 2; i++)
+            cout << "#";
+        cout << endl;
+        cout << "Score:" << score << endl;
+    }
+
+    void Input() {
+        if (_kbhit()) {
+            snake.ChangeDir(_getch());
+        }
+    }
+
+    void Logic() {
+        snake.Move();
+        if (snake.CollisionCheck(fruitX, fruitY)) {
+            score += 10;
+            fruitX = rand() % WIDTH;
+            fruitY = rand() % HEIGHT;
+        }
+        gameOver = snake.GameOver();
+    }
+
+    bool IsGameOver() const { return gameOver; }
+
+    void Run() {
+        while (!gameOver) {
+            Draw();
+            Input();
+            Logic();
+            Sleep(100);
+        }
+    }
+};
+
+int main() {
+    Game game;
+    game.Run();
     return 0;
 }
+
 
